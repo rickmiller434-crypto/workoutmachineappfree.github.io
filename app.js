@@ -1209,7 +1209,147 @@ class VitruvianApp {
       alert(`Failed to set color scheme: ${error.message}`);
     }
   }
+}// --- BEGIN Sidebar Features and Logic ---
+
+// Sample Exercise DB (expand as desired)
+const EXERCISES = {
+  chest: ["Bench Press","Incline Press","Chest Fly","Push-Ups","Cable Crossover","Dips","Decline Press"],
+  back: ["Pull-Ups","Lat Pulldown","Bent Row","Seated Row","Deadlift","Face Pulls","T-Bar Row"],
+  legs: ["Squats","Lunges","Leg Press","Leg Curl","Leg Extension","Calf Raises","Bulgarian Split Squat"],
+  shoulders: ["Overhead Press","Lateral Raise","Front Raise","Rear Delt Fly","Arnold Press","Upright Row"],
+  arms: ["Bicep Curl","Tricep Extension","Hammer Curl","Skull Crushers","Preacher Curl","Tricep Pushdown"],
+  core: ["Plank","Crunches","Russian Twist","Leg Raises","Cable Woodchop","Bicycle Crunches","Mountain Climbers"]
+};
+
+let selectedExercise = null;
+let personalBests = JSON.parse(localStorage.getItem('vitruvian_pbs') || '{}');
+let leaderboard = JSON.parse(localStorage.getItem('vitruvian_leaderboard') || '[]');
+
+// Attach all required listeners on sidebar
+function initSidebarFeatures() {
+  renderExercises();
+  renderPersonalBests();
+  renderLeaderboard();
+
+  document.getElementById('exerciseSearch').oninput = renderExercises;
+  document.getElementById('muscleFilter').onchange = renderExercises;
+  document.getElementById('startBtn').onclick = startWorkoutFromSidebar;
 }
+
+function renderExercises() {
+  const search = document.getElementById('exerciseSearch').value.toLowerCase();
+  const muscle = document.getElementById('muscleFilter').value;
+  const listEl = document.getElementById('exerciseList');
+  let exercises = [];
+
+  if (muscle === 'all') {
+    Object.values(EXERCISES).forEach(list => exercises.push(...list));
+  } else {
+    exercises = EXERCISES[muscle] || [];
+  }
+  exercises = exercises.filter(ex => ex.toLowerCase().includes(search));
+  listEl.innerHTML = exercises.map(ex =>
+    `<div class="exercise-item" onclick="selectExercise('${ex}')">${ex}</div>`
+  ).join('');
+}
+
+window.selectExercise = function(name) {
+  selectedExercise = name;
+  document.getElementById('selectedExercise').textContent = `Selected: ${name}`;
+  document.querySelectorAll('.exercise-item').forEach(item => {
+    item.style.background = item.textContent === name ? '#667eea' : '#f5f5f5';
+    item.style.color = item.textContent === name ? 'white' : 'black';
+  });
+  updateMuscleHeatmap(name);
+};
+
+function startWorkoutFromSidebar() {
+  // You can extend this with validation, BLE device setup, etc.
+  // For demo: just "start" with selected settings
+  let mode = document.getElementById('mode').value;
+  let weight = parseFloat(document.getElementById('weight').value);
+  let reps = parseInt(document.getElementById('reps').value, 10);
+
+  // Optionally update BLE logic here (see device.js for workout start)
+  // e.g. device.startWorkout(selectedExercise, mode, weight, reps);
+
+  // Save workout parameters for next time
+  localStorage.setItem('vitruvian_lastworkout',
+    JSON.stringify({ exercise: selectedExercise, mode, weight, reps })
+  );
+}
+
+function renderPersonalBests() {
+  const pbList = document.getElementById('pbList');
+  const pbs = Object.entries(personalBests).slice(0, 5);
+  if (pbs.length === 0) {
+    pbList.innerHTML = '<p style="color:#999;font-size:0.9em">Complete workouts to track PRs</p>';
+    return;
+  }
+  pbList.innerHTML = pbs.map(([exercise, weight]) =>
+    `<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee">
+      <span style="font-size:0.9em">${exercise}</span>
+      <strong style="color:#667eea">${weight}kg</strong>
+    </div>`
+  ).join('');
+}
+
+function renderLeaderboard() {
+  const lbList = document.getElementById('leaderboardList');
+  const sorted = leaderboard.sort((a,b) => b.score - a.score).slice(0,5);
+  if (sorted.length === 0) {
+    lbList.innerHTML = '<p style="color:#999;font-size:0.9em">No entries yet</p>';
+    return;
+  }
+  lbList.innerHTML = sorted.map((entry, i) =>
+    `<div style="display:flex;gap:10px;padding:8px;background:#f5f5f5;margin:5px 0;border-radius:5px">
+      <span style="font-weight:bold;width:30px;color:${i===0?'gold':i===1?'silver':i===2?'#cd7f32':'#667eea'}">${i+1}</span>
+      <span style="flex:1">${entry.name}</span>
+      <span style="font-weight:bold">${entry.score}</span>
+    </div>`
+  ).join('');
+}
+
+// Highlight muscle heatmap based on selected exercise or muscle group
+function updateMuscleHeatmap(selected) {
+  // Reset all to default
+  ['chest','shoulders-l','shoulders-r','arms-l','arms-r','core','legs-l','legs-r'].forEach(id => {
+    let el = document.getElementById('m-'+id);
+    if (el) el.setAttribute('fill', '#ddd');
+  });
+  if (!selected) return;
+
+  // Basic highlight detection by exercise name
+  let map = {
+    "chest": ['chest'],
+    "shoulder": ['shoulders-l','shoulders-r'],
+    "arm": ['arms-l','arms-r'],
+    "core": ['core'],
+    "leg": ['legs-l','legs-r'],
+    "back": ['shoulders-l','shoulders-r','arms-l','arms-r'] // e.g., as default
+  };
+  const ex = selected.toLowerCase();
+  if (ex.match(/chest|press|fly|push/)) highlight(['chest']);
+  else if (ex.match(/shoulder|overhead|lateral|arnold/)) highlight(['shoulders-l','shoulders-r']);
+  else if (ex.match(/bicep|tricep|curl|skull|hammer/)) highlight(['arms-l','arms-r']);
+  else if (ex.match(/core|plank|crunch|twist|woodchop/)) highlight(['core']);
+  else if (ex.match(/squat|lunge|leg|calf/)) highlight(['legs-l','legs-r']);
+  else if (ex.match(/pull|row|deadlift/)) highlight(['shoulders-l','shoulders-r','arms-l','arms-r','back']);
+  function highlight(ids) {
+    ids.forEach(id => {
+      let el = document.getElementById('m-'+id);
+      if (el) el.setAttribute('fill', '#f88');
+    });
+  }
+}
+
+// Re-init sidebar features after DOM loaded or SPA route change
+window.addEventListener('DOMContentLoaded', () => {
+  initSidebarFeatures();
+});
+
+// --- END Sidebar Features and Logic ---
+
 
 // Create global app instance
 const app = new VitruvianApp();
