@@ -1,4 +1,62 @@
-// app.js - Main application logic and UI management
+// app.js - Main application log<!-- SIDEBAR FEATURE ENHANCEMENTS BEGIN -->
+
+<div class="section">
+  <h2>Exercise Library 💪</h2>
+  <input type="text" id="exerciseSearch" placeholder="Search exercises...">
+  <select id="muscleFilter">
+    <option value="all">All Muscles</option>
+    <option value="chest">Chest</option>
+    <option value="back">Back</option>
+    <option value="legs">Legs</option>
+    <option value="shoulders">Shoulders</option>
+    <option value="arms">Arms</option>
+    <option value="core">Core</option>
+  </select>
+  <div id="exerciseList" style="max-height:200px;overflow-y:auto"></div>
+</div>
+
+<div class="section">
+  <h2>Workout Setup</h2>
+  <div id="selectedExercise" style="padding:10px;background:#f0f0f0;border-radius:5px;margin-bottom:10px">Select an exercise above</div>
+  <select id="mode">
+    <option value="0">Old School</option>
+    <option value="1">Pump</option>
+    <option value="2">TUT</option>
+    <option value="3">TUT Beast</option>
+    <option value="4">Eccentric Only</option>
+  </select>
+  <input type="number" id="weight" value="10" min="0" max="100" step="0.5" placeholder="Weight per Cable (kg)">
+  <input type="number" id="reps" value="10" min="1" max="100" placeholder="Target Reps">
+  <button id="startBtn">Start Workout</button>
+</div>
+
+<div class="section">
+  <h2>Personal Bests 🏆</h2>
+  <div id="pbList"></div>
+</div>
+
+<div class="section">
+  <h2>Leaderboard 🎯</h2>
+  <input type="text" id="userName" placeholder="Your name">
+  <div id="leaderboardList"></div>
+</div>
+
+<!-- Muscle Activity Heatmap SVG -->
+<div class="section">
+  <h2>Muscle Activity Heat Map 🔥</h2>
+  <svg id="muscleHeatmap" viewBox="0 0 400 600" style="width:100%;max-width:400px;margin:20px auto;display:block">
+    <ellipse id="m-chest" cx="200" cy="150" rx="60" ry="40" fill="#ddd" stroke="#333" stroke-width="2"/>
+    <circle id="m-shoulders-l" cx="140" cy="130" r="25" fill="#ddd" stroke="#333" stroke-width="2"/>
+    <circle id="m-shoulders-r" cx="260" cy="130" r="25" fill="#ddd" stroke="#333" stroke-width="2"/>
+    <ellipse id="m-arms-l" cx="130" cy="190" rx="20" ry="35" fill="#ddd" stroke="#333" stroke-width="2"/>
+    <ellipse id="m-arms-r" cx="270" cy="190" rx="20" ry="35" fill="#ddd" stroke="#333" stroke-width="2"/>
+    <rect id="m-core" x="170" y="200" width="60" height="80" rx="10" fill="#ddd" stroke="#333" stroke-width="2"/>
+    <ellipse id="m-legs-l" cx="170" cy="380" rx="25" ry="70" fill="#ddd" stroke="#333" stroke-width="2"/>
+    <ellipse id="m-legs-r" cx="230" cy="380" rx="25" ry="70" fill="#ddd" stroke="#333" stroke-width="2"/>
+  </svg>
+</div>
+<!-- SIDEBAR FEATURE ENHANCEMENTS END -->
+ic and UI management
 
 class VitruvianApp {
   constructor() {
