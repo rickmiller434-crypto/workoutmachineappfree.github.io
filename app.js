@@ -1,4 +1,4 @@
-// app.js - Main application logic and UI management
+// app.js - Main application logic and UI managementworkoutmachineappfree.github.io/app.js
 
 const LB_PER_KG = 2.2046226218488;
 const KG_PER_LB = 1 / LB_PER_KG;
